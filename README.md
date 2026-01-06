@@ -47,7 +47,7 @@ This fork maintains all dynamic workspace features from the original script but 
 - Always start with **two** desktops  
 - Always begin on **Desktop 1**  
 
-The original script restored every desktop from the previous session and placed the user on whichever desktop they last used. Under Plasma 6, this could lead to cluttered or inconsistent startup states.
+The original script allowed every desktop from the previous session to be restored  and placed the user on whichever desktop they last used. this could lead to cluttered or inconsistent startup states.(a byproduct of how Plasma handles workspaces by default) 
 
 This fork ensures a clean, minimal workspace layout that grows only as needed.
 
