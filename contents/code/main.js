@@ -5,38 +5,32 @@
 
 // Desktop numbers are from zero (unlike how it worked in plasma 5)
 
-
 const MIN_DESKTOPS = 2;
 const LOG_LEVEL = 2; // 0 trace, 1 debug, 2 info
-
 
 function log(...args) { print("[dynamic_workspaces] ", ...args); }
 function debug(...args) { if (LOG_LEVEL <= 1)  log(...args); }
 function trace(...args) { if (LOG_LEVEL <= 0)  log(...args); }
-
 
 // In plasma 6 simply removing a desktop breaks the desktop switching
 // animation. We use a workaround with emitting more switches at the right time
 // to force the animation to play
 let animationFixup = false;
 
-
 /*****  Plasma 5/6 differences  *****/
-
 
 const isKde6 = typeof workspace.windowList === "function";
 const compat = isKde6
-	?
-		{ addDesktop = () =>
-			{ workspace.createDesktop(workspace.desktops.length, undefined); }
-		, windowAddedSignal = ws => ws.windowAdded
-		, windowList = ws => ws.windowList()
-		, desktopChangedSignal = c => c.desktopsChanged
-
-		, toDesktop = d => d
-		, workspaceDesktops = () => workspace.desktops
-		, lastDesktop = () => workspace.desktops[workspace.desktops.length - 1]
-		, deleteLastDesktop = () =>
+	? {
+		addDesktop: () =>
+			{ workspace.createDesktop(workspace.desktops.length, undefined); },
+		windowAddedSignal: ws => ws.windowAdded,
+		windowList: ws => ws.windowList(),
+		desktopChangedSignal: c => c.desktopsChanged,
+		toDesktop: d => d,
+		workspaceDesktops: () => workspace.desktops,
+		lastDesktop: () => workspace.desktops[workspace.desktops.length - 1],
+		deleteLastDesktop: () =>
 			{
 				try
 				{
@@ -59,26 +53,25 @@ const compat = isKde6
 				{
 					animationFixup = false;
 				}
-			}
-		, findDesktop = (ds, d) => ds.indexOf(d)
-
-		, clientDesktops = c => c.desktops
-		, setClientDesktops = (c, ds) =>
+			},
+		findDesktop: (ds, d) => ds.indexOf(d),
+		clientDesktops: c => c.desktops,
+		setClientDesktops: (c, ds) =>
 			{
 				c.desktops = ds;
-			}
-		, clientOnDesktop = (c, d) => c.desktops.indexOf(d) !== -1
-		}
-	:
-		{ addDesktop = () =>
-			{ workspace.createDesktop(workspace.desktops, "dyndesk"); }
-		, windowAddedSignal = ws => ws.clientAdded
-		, windowList = ws => ws.clientList()
-		, desktopChangedSignal = c => c.desktopChanged
-
+			},
+		clientOnDesktop: (c, d) => c.desktops.indexOf(d) !== -1,
+		desktopAmount: () => workspace.desktops.length,
+	}
+	: {
+		addDesktop: () =>
+			{ workspace.createDesktop(workspace.desktops, "dyndesk"); },
+		windowAddedSignal: ws => ws.clientAdded,
+		windowList: ws => ws.clientList(),
+		desktopChangedSignal: c => c.desktopChanged,
 		// emulate plasma 6 behaviour with custom types
-		, toDesktop = number => {{ index: number - 1 }}
-		, workspaceDesktops = () =>
+		toDesktop: number => ({ index: number - 1 }),
+		workspaceDesktops: () =>
 			{
 				let r = [];
 				for (let i = 0; i < workspace.desktops; ++i)
@@ -89,11 +82,11 @@ const compat = isKde6
 					r.push(desktop);
 				}
 				return r;
-			}
-		, lastDesktop = () => {{ index: workspace.desktops - 1 }}
-		, deleteLastDesktop = () =>
-			{ workspace.removeDesktop(workspace.desktops - 1); }
-		, findDesktop = (ds, d) =>
+			},
+		lastDesktop: () => ({ index: workspace.desktops - 1 }),
+		deleteLastDesktop: () =>
+			{ workspace.removeDesktop(workspace.desktops - 1); },
+		findDesktop: (ds, d) =>
 			{
 				for (let i = 0; i < ds.length; ++i)
 				{
@@ -103,26 +96,22 @@ const compat = isKde6
 					}
 				}
 				return -1;
-			}
-
-		, clientDesktops = c =>
+			},
+		clientDesktops: c =>
 			c
 				.x11DesktopIds
-				.map(id => {return {index: id - 1}})
-		, setClientDesktops = (c, ds) =>
+				.map(id => {return {index: id - 1}}),
+		setClientDesktops: (c, ds) =>
 			{
-				// Plasma 5 is supports window on multiple desktops, and there
-				// are even functions for it in the API, but they are bugged.
-				// So we have to do this. So far, noone has complained, so
-				// maybe noone uses this feature?
+				// Plasma 5 supports window on multiple desktops, but buggy,
+				// so assign only first desktop for now.
 				c.desktop = ds[0];
-			}
-		, clientOnDesktop = (c, d) => c.desktop === d.index + 1
-		};
-
+			},
+		clientOnDesktop: (c, d) => c.desktop === d.index + 1,
+		desktopAmount: () => workspace.desktops,
+	};
 
 /*****  Logic definition  *****/
-
 
 // shifts a window to the left if it's more to the right than number
 function shiftRighterThan(client, number)
@@ -296,26 +285,27 @@ function onDesktopSwitch(oldDesktop)
 	}
 }
 
-
 /*****  Main part *****/
-function resetDesktopsToMinimum()
-{
-	let desktops = compat.workspaceDesktops();
 
-	while (desktops.length > MIN_DESKTOPS)
+// Replaces resetDesktopsToMinimum with a better culling function
+function cullExtraDesktops()
+{
+	while (compat.desktopAmount() > MIN_DESKTOPS)
 	{
-		const idx = desktops.length - 2; // never remove the last one directly
-		if (!removeDesktop(idx))
+		try
 		{
+			compat.deleteLastDesktop();
+		}
+		catch (e)
+		{
+			debug("Failed to delete last desktop:", e);
 			break;
 		}
-		desktops = compat.workspaceDesktops();
 	}
 }
 
 // Run once on script load (login)
-resetDesktopsToMinimum();
-
+cullExtraDesktops();
 
 // Adding or removing a client might create desktops.
 // For all existing clients:
