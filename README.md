@@ -36,7 +36,7 @@ This eliminates legacy workarounds and results in:
 
 ### Proper Desktop Renumbering 🔢  
 Desktops are always sequential (`Desktop 1, Desktop 2, Desktop 3…`) with no gaps or stale IDs.  
-This keeps the pager and internal ordering consistent — something the original script couldn’t guarantee due to Plasma 5 limitations.
+This keeps the pager and internal ordering consistent — something the original script couldn’t manage due to Plasma 5 limitations.
 
 ---
 
