@@ -3,7 +3,7 @@
 
 A modernized, Plasma‑6‑native fork of the original **dynamic_workspaces** KWin script.  
 This version focuses on predictable desktop ordering, GNOME‑like dynamic workspace behavior, and a simplified, Plasma‑6‑only codebase.
-This means, of course this fork has dropped Plasma 5 support
+In pursuit of this vision, this fork has dropped Plasma 5 support
 
 ---
 
