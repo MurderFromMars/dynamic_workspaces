@@ -92,5 +92,5 @@ MIT is simpler, widely used in the Linux/KDE ecosystem, and more approachable fo
 ## Credits 🙏
 
 This project is based on the original work by **maurges**, whose script established the foundation for dynamic workspaces on KDE.  
-This fork updates that vision for Plasma 6 while keeping the spirit of the original project intact.
+This fork updates that vision for Plasma 6 while aiming for a closer to GNOME behavior experience.
 
