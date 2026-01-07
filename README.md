@@ -124,7 +124,7 @@ Replaced with:
 
 # License (MIT) 📄
 
-This fork uses the MIT License — simple, permissive, and contributor‑friendly.
+This fork uses the MIT License, this is a change from the BSD3 license of the original project 
 
 ---
 
