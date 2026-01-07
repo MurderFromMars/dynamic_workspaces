@@ -1,4 +1,4 @@
-// Better Dynamic Workspaces
+// Better Dynamic Workspaces  V1.3
 
 const MIN_DESKTOPS = 2;
 const LOG_LEVEL = 2; // 0 verbose, 1 debug, 2 normal
@@ -60,7 +60,7 @@ const compat = {
 	desktopAmount: () => workspace.desktops.length,
 };
 
-/******** Desktop Renumbering (Correctly Handles Desktop 0) ********/
+/******** Desktop Renumbering ********/
 
 function renumberDesktops() {
 	let count = compat.desktopAmount();
@@ -69,14 +69,10 @@ function renumberDesktops() {
 		const desktops = compat.workspaceDesktops();
 		const current = desktops[i];
 
-		// If the desktop object is not actually at index i, rebuild it
 		if (desktops.indexOf(current) !== i) {
-
-			// Create a new desktop at the end
 			compat.addDesktop();
 			const newDesk = compat.lastDesktop();
 
-			// Move windows from old desktop to new one
 			compat.windowList(workspace).forEach(client => {
 				if (compat.clientOnDesktop(client, current)) {
 					const newList = compat.clientDesktops(client)
@@ -85,65 +81,14 @@ function renumberDesktops() {
 				}
 			});
 
-			// Remove the old desktop
 			compat.deleteLastDesktop();
 		}
 	}
 }
 
-/******** Core Behavior ********/
-
-function shiftClientsLeft(client, cutoff) {
-	trace(`shiftClientsLeft(${client.caption}, ${cutoff})`);
-	if (cutoff === 0) return;
-
-	const all = compat.workspaceDesktops();
-	const cds = compat.clientDesktops(client);
-	const updated = [];
-
-	let i = 0;
-	for (const d of cds) {
-		while (d !== all[i]) {
-			i++;
-			if (i > all.length)
-				throw new Error("Unexpected desktop identity mismatch");
-		}
-
-		if (i < cutoff || i === 0) {
-			updated.push(d);
-		} else {
-			updated.push(all[i - 1]);
-		}
-	}
-
-	compat.setClientDesktops(client, updated);
-}
-
-function removeDesktop(idx) {
-	trace(`removeDesktop(${idx})`);
-
-	const count = compat.desktopAmount();
-	if (count - 1 <= idx) {
-		debug("Skipping removal: last desktop");
-		return false;
-	}
-	if (count <= MIN_DESKTOPS) {
-		debug("Skipping removal: minimum reached");
-		return false;
-	}
-
-	compat.windowList(workspace).forEach(c => shiftClientsLeft(c, idx));
-
-	compat.deleteLastDesktop();
-	debug("Desktop removed");
-
-	renumberDesktops();
-	return true;
-}
+/******** GNOME‑Accurate Cleanup ********/
 
 function desktopIsEmpty(idx) {
-	trace(`desktopIsEmpty(${idx})`);
-
 	const d = compat.workspaceDesktops()[idx];
 	const clients = compat.windowList(workspace);
 
@@ -153,7 +98,6 @@ function desktopIsEmpty(idx) {
 			!c.skipPager &&
 			!c.onAllDesktops
 		) {
-			debug(`Desktop ${idx} occupied by ${c.caption}`);
 			return false;
 		}
 	}
@@ -161,28 +105,67 @@ function desktopIsEmpty(idx) {
 	return true;
 }
 
-function handleClientDesktopChange(client) {
-	trace(`handleClientDesktopChange(${client.caption})`);
+function removeDesktop(idx) {
+	const count = compat.desktopAmount();
+	if (count - 1 <= idx) return false;
+	if (count <= MIN_DESKTOPS) return false;
 
-	const last = compat.lastDesktop();
-	if (compat.clientOnDesktop(client, last)) {
-		compat.addDesktop();
+	compat.windowList(workspace).forEach(c => {
+		const cds = compat.clientDesktops(c);
+		const all = compat.workspaceDesktops();
+		const updated = cds.map(d => {
+			const i = all.indexOf(d);
+			return i > idx ? all[i - 1] : d;
+		});
+		compat.setClientDesktops(c, updated);
+	});
+
+	compat.deleteLastDesktop();
+	renumberDesktops();
+	return true;
+}
+
+/******** Unified GNOME Cleanup ********/
+
+function enforceGnomeModel() {
+	if (animationGuard) return;
+
+	animationGuard = true;
+	try {
+		const all = compat.workspaceDesktops();
+		const lastIdx = all.length - 1;
+
+		// Remove all empty desktops except the last one
+		for (let i = lastIdx - 1; i >= 0; i--) {
+			if (desktopIsEmpty(i)) {
+				removeDesktop(i);
+			}
+		}
+
+		// Ensure last desktop is empty
+		const newLastIdx = compat.desktopAmount() - 1;
+		if (!desktopIsEmpty(newLastIdx)) {
+			compat.addDesktop();
+		}
+
 		renumberDesktops();
+	} finally {
+		animationGuard = false;
 	}
 }
 
+/******** Core Behavior ********/
+
+function handleClientDesktopChange(client) {
+	if (compat.clientOnDesktop(client, compat.lastDesktop())) {
+		compat.addDesktop();
+		renumberDesktops();
+	}
+	enforceGnomeModel();
+}
+
 function onClientAdded(client) {
-	if (!client) {
-		log("onClientAdded(null) — rare but possible");
-		return;
-	}
-
-	trace(`onClientAdded(${client.caption})`);
-
-	if (client.skipPager) {
-		debug("Ignoring hidden/pager‑skipped window");
-		return;
-	}
+	if (!client || client.skipPager) return;
 
 	if (compat.clientOnDesktop(client, compat.lastDesktop())) {
 		compat.addDesktop();
@@ -192,34 +175,8 @@ function onClientAdded(client) {
 	compat.desktopChangedSignal(client).connect(() => {
 		handleClientDesktopChange(client);
 	});
-}
 
-function onDesktopSwitch(previous) {
-	trace(`onDesktopSwitch(${previous})`);
-
-	if (animationGuard) return;
-
-	const all = compat.workspaceDesktops();
-	const prevIdx = compat.findDesktop(all, compat.toDesktop(previous));
-	const currIdx = compat.findDesktop(all, compat.toDesktop(workspace.currentDesktop));
-	const keepMiddle = readConfig("keepEmptyMiddleDesktops", false);
-
-	if (prevIdx <= currIdx) {
-		debug("Moved rightward — no cleanup");
-		return;
-	}
-
-	for (let i = compat.desktopAmount() - 2; i > currIdx && i > 0; i--) {
-		debug(`Checking desktop ${i}`);
-		if (desktopIsEmpty(i)) {
-			removeDesktop(i);
-		} else if (keepMiddle) {
-			debug("Stopping cleanup — encountered non‑empty desktop");
-			break;
-		}
-	}
-
-	renumberDesktops();
+	enforceGnomeModel();
 }
 
 /******** Initialization ********/
@@ -229,7 +186,6 @@ function trimToMinimum() {
 		try {
 			compat.deleteLastDesktop();
 		} catch (err) {
-			debug("Error trimming desktops:", err);
 			break;
 		}
 	}
@@ -245,7 +201,6 @@ trimToMinimum();
 		try {
 			compat.deleteLastDesktop();
 		} catch (err) {
-			debug("Init cleanup failed:", err);
 			break;
 		}
 	}
@@ -259,12 +214,13 @@ trimToMinimum();
 
 compat.windowList(workspace).forEach(onClientAdded);
 compat.windowAddedSignal(workspace).connect(onClientAdded);
+workspace.windowRemoved.connect(() => enforceGnomeModel());
 
-workspace.currentDesktopChanged.connect(onDesktopSwitch);
+workspace.currentDesktopChanged.connect(() => enforceGnomeModel());
 
-// Enforcemtn of desktop 1 focus on startup to counteract loop hole that allows startup to foccus on desktop 2
+// Startup redirect to enforce GNOME behavior
 let initialRedirectDone = false;
-workspace.currentDesktopChanged.connect(function (previous) {
+workspace.currentDesktopChanged.connect(function () {
 	if (initialRedirectDone) return;
 	initialRedirectDone = true;
 
@@ -280,3 +236,4 @@ workspace.currentDesktopChanged.connect(function (previous) {
 		}
 	}
 });
+
