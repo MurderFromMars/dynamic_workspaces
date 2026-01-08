@@ -1,6 +1,6 @@
 # Better Dynamic Workspaces
 
-This project brings the full GNOME dynamic workspace experience to Plasma by reimagining dynamic_workspaces for Plasma 6. It provides predictable workspace ordering, GNOME accurate behavior, and a streamlined Plasma 6 native codebase built on the original work by maurges.
+This fork aims to bring the full GNOME dynamic workspace experience to Plasma   
 
 # Purpose of This Fork
 
