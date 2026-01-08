@@ -122,10 +122,8 @@ Replaced with:
 
 
 
-# License (MIT) 📄
-
-This fork uses the MIT License, this is a change from the BSD3 license of the original project, this change was made to make this poject more in line with modern expectations on a kwinscript
-
+# License (BSD3) 📄
+This fork maintains the BSD3 licnese of the original project with proper attributions on both sides 
 
 
 # Credits 🙏
