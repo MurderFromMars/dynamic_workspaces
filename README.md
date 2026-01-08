@@ -25,8 +25,7 @@ Desktops are always kept in sequential order. Renumbering happens automatically 
 ## Predictable Startup Behavior
 The script ensures that every session begins in a clean state. The user always starts on Desktop 1. The session always begins with exactly two desktops. Plasma’s session restore behavior is bypassed so that old desktops are not recreated automatically.
 
-## Modernized Logic and Structure
-The codebase removes Plasma 5 compatibility, deprecated APIs, direction dependent cleanup, and window shifting. It replaces them with direct Plasma 6 desktop objects, a unified cleanup pass, clear rules for adding and removing desktops, animation guarding, and an append only lifecycle. The result is a smaller, clearer, and more maintainable script.
+---
 
 # Comparison With the Original Project
 
