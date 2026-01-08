@@ -1,4 +1,4 @@
-// Better Dynamic Workspaces  V1.3
+// Better Dynamic Workspaces  
 
 const MIN_DESKTOPS = 2;
 const LOG_LEVEL = 2; // 0 verbose, 1 debug, 2 normal
@@ -218,7 +218,7 @@ workspace.windowRemoved.connect(() => enforceGnomeModel());
 
 workspace.currentDesktopChanged.connect(() => enforceGnomeModel());
 
-// Startup redirect to enforce GNOME behavior
+// Startup redirect to enforce GNOME behavior.... might not be needed anymore tbh XD 
 let initialRedirectDone = false;
 workspace.currentDesktopChanged.connect(function () {
 	if (initialRedirectDone) return;
