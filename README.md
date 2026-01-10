@@ -106,7 +106,7 @@ It provides stable index preserving behavior, minimal startup state, continuous 
 
 ## Credits
 
-Kyanite began as a fork of the original dynamic workspace script by Maurges. Their work laid the foundation for dynamic workspaces in Plasma. Over time, Kyanite diverged so significantly that remaining a fork no longer made sense, and it is now maintained as a standalone project.
+Kyanite began as a fork of the original dynamic workspace script by Maurges. Their work laid the foundation for dynamic workspaces in Plasma. Kyanite quickly diverged so significantly that remaining a fork no longer made sense, and it is now maintained as a standalone project.
 
 ## License (GPL 3.0)
 
