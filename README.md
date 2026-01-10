@@ -112,14 +112,14 @@ Kyanite is designed to be:
 
 - Non recursive
 - Animation safe
-- Plasma compatible
+- Avoid interfering with kwin operations
 - Resistant to race conditions
 
 The animationGuard ensures that transitions never trigger nested compaction or desktop switching loops.
 
 ## Credit and Inspiration
 
-Kyanite began life as a fork of dynamic_workspaces by Maurges, a project that explored similar ideas around adaptive virtual desktops. Seeking to improve the experience the codebase has evolved so much  that remaining a fork no longer makes sense. The logic, structure, and behavior have change to the point where Kyanite has become its own distinct project. with virutally none of the origiinal code remaining, and so this brings me to this project being relicensed,
+Kyanite began life as a fork of dynamic_workspaces by Maurges, a project that explored similar ideas around adaptive virtual desktops. Seeking to improve the experience, the codebase has evolved so much  that remaining a fork no longer makes sense. The logic, structure, and behavior have change to the point where Kyanite has become its own distinct project. with virutally none of the origiinal code remaining, and so this brings me to this project being relicensed,
 
 ## License
 
