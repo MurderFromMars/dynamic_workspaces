@@ -80,6 +80,8 @@ When cleaning up:
 Before compaction, Kyanite records your current desktop index.  
 After compaction, it restores you to the same index whenever possible.
 
+# Known Limitations
+
 ## Manual Desktop Manipulation
 
 Kyanite is designed to manage virtual desktops automatically. When desktops are created or removed manually, Plasma behaves in ways that Kyanite cannot safely track or correct.
@@ -106,16 +108,10 @@ KWin scripting cannot block or override manual desktop creation or removal. If u
 ### No Workarounds
 Any workaround for these issues would be hack like in nature and would come at a high cost to stability and functionality. After extensive investigation, there is simply no way to fix manual desktop manipulation without making the script objectively worse. For this reason, any issues opened about problems caused by manual desktop manipulation will be ignored and closed.
 
-## Stability Notes
+**Addtional Note**
+Multimonitor Support should be fine, I have a single display setup, so it remains untested however, plasma handles workspaces globally and my script doesn't interfere with that. Theoretically it should work identically with your desktop list being shared across multiple monitors. 
 
-Kyanite is designed to be:
-
-- Non recursive
-- Animation safe
-- Avoid interfering with kwin operations
-- Resistant to race conditions
-
-The animationGuard ensures that transitions never trigger nested compaction or desktop switching loops.
+---
 
 ## Credit and Inspiration
 
