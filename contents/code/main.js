@@ -52,7 +52,9 @@ const compat = {
 
 			workspace.removeDesktop(last);
 
-			if (current) workspace.currentDesktop = current;
+			if (current && current !== last) {
+				workspace.currentDesktop = current;
+			}
 
 		} finally {
 			animationGuard = false;
@@ -105,14 +107,6 @@ function compactFromEnd() {
 			if (desktopIsEmpty(i)) {
 				shiftWindowsDown(i);
 				compat.deleteLastDesktop();
-			}
-		}
-
-		const count = compat.desktopAmount();
-		if (count > 1) {
-			const newLastIdx = count - 1;
-			if (!desktopIsEmpty(newLastIdx)) {
-				compat.addDesktop();
 			}
 		}
 
@@ -195,7 +189,8 @@ function onClientAdded(client) {
 		handleClientDesktopChange(client);
 	});
 
-	compactPreservingIndex();
+	// Removed:
+	// compactPreservingIndex();
 }
 
 /******** Initialization ********/
@@ -215,9 +210,5 @@ compat.windowList(workspace).forEach(onClientAdded);
 compat.windowAddedSignal(workspace).connect(onClientAdded);
 
 workspace.windowRemoved.connect(() => {
-	compactPreservingIndex();
-});
-
-workspace.currentDesktopChanged.connect(() => {
 	compactPreservingIndex();
 });
