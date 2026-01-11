@@ -7,7 +7,7 @@
     , "Description": "Hybrid dynamic workspace management for Plasma 6."
     , "Icon": "preferences-system-windows-script-test"
     , "Id": "kyanite"
-    , "License": "GPL-3.0"
+    , "License": "MIT"
     , "Name": "Kyanite"
     , "Version": "1.4"
     }
